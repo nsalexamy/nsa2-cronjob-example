@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: nsa2-cronjob-example
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: nsa2-cronjob-example
+              image: iclinicacr.azurecr.io/nsa2-cronjob-example:0.1.0
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: JAVA_TOOL_OPTIONS
+                  value: "-javaagent:/usr/app/javaagent/opentelemetry-javaagent.jar"
+                - name: OTEL_EXPORTER_OTLP_ENDPOINT
+                  value: "http://otel-collector:4318"
+                - name: OTEL_LOGS_EXPORTER
+                  value: "otlp"
+                - name: OTEL_TRACES_EXPORTER
+                  value: "otlp"
+                - name: OTEL_METRICS_EXPORTER
+                  value: "prometheus"
+              command:
+                - /bin/sh
+                - -c
+                - "java -Xshare:off -Dotel.javaagent.extensions=/usr/app/javaagent/nsa2-otel-extension-1.0-all.jar -jar /usr/app/nsa2-cronjob-example.jar"
+#                - /bin/sh
+#                - -c
+#                - date; echo Hello from the Kubernetes cluster
+          restartPolicy: OnFailure

@@ -1,0 +1,9 @@
+{
+  "generator-nsa2": {
+    "project_name": "nsa2-cronjob-example",
+    "project_version": "0.0.1-SNAPSHOT",
+    "container_repository": "iclinicacr.azurecr.io",
+    "container_name": "nsa2-cronjob-example",
+    "container_tag": "0.1.0"
+  }
+}
