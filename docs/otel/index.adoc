@@ -1,0 +1,181 @@
+= Add OpenTelemetry to Spring Boot application for batch processing
+
+:imagesdir: images
+:projectdir: ../..
+:sourcedir: {projectdir}/src/main/java
+:resourcesdir: {projectdir}/src/main/resources
+
+== Introduction
+
+Unlike Spring Boot Web applications, batch processing applications do not have a built-in mechanism to trace requests. In this guide, we will add OpenTelemetry to a Spring Boot batch processing application to trace requests.
+
+image::batch-no-span.png[]
+
+As we can see in the image above, the batch processing application does not have any spans. All database operations are traced as individual spans which does not provide all related traces for an execution of a batch job. In case of Spring Web applications, the request to  an endpoint is traced as a single span which includes all database operations or other HTTP requests and so on.
+
+In this article, we will put all traces related to a batch job execution under a single span.
+
+
+== Spring Boot Application for Batch Processing
+
+We are going to create a simple Spring Boot application that runs a batch job. The batch job will read data from source database, and call REST APIs to process the data. And then it will write the processed data to a target database.
+
+But for now, we will create a simple batch job that writes a message to the console to make it simple. The batch job will be executed by the command line runner and exit after the job is done.
+
+=== Spring Boot Application
+
+In this section, we will look into source files listed below:
+
+* build.gradle.kts
+* HelloWorldJob.java
+* SpringBootJobApplication.java
+
+
+.build.gradle.kts
+[source,kotlin]
+----
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter")
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+----
+
+I only added lombok to the dependencies. The application is a simple Spring Boot application with no web server.
+
+.HelloWorldJob.java
+[source,java]
+----
+@Component
+@Slf4j
+public class HelloWorldJob {
+    public void execute() {
+        log.info("Hello World! - executed at {}", new Date().toString());
+    }
+}
+----
+
+The `HelloWorldJob` class is a simple Spring component that logs a message.
+
+
+.SpringBootJobApplication.java
+[source,java]
+----
+@Slf4j
+@SpringBootApplication
+@RequiredArgsConstructor
+public class Nsa2CronjobExampleApplication implements CommandLineRunner {
+    private final HelloWorldJob helloWorldJob;
+
+    public static void main(String[] args) {
+        SpringApplication.run(Nsa2CronjobExampleApplication.class, args);
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        helloWorldJob.execute();
+    }
+
+}
+
+----
+
+==== Build the Application
+
+[source,shellscript]
+----
+$ ./gradlew clean bootJar
+----
+
+The command above builds the application and creates a JAR file in the `build/libs` directory. The name of the JAR file is `nsa2-cronjob-example-0.0.1-SNAPSHOT.jar` and it will be used to run the application as a job in Dkron.
+
+If you run the application with OpenTelemetry Instrumentation, you will NOT see any spans related to the batch job execution because OpenTelemetry does not trace the HelloWorldJob component because it does not make any HTTP requests or database operations. 
+
+Let's add manually OpenTelemetry to the application to trace the batch job execution.
+
+
+== Add dependencies
+
+To add span manually to our source code, we need to add OpenTelemetry dependencies to our project.
+
+Refer to the official documentation for more details: 
+
+* https://opentelemetry.io/docs/zero-code/java/spring-boot-starter/getting-started/
+
+Add code snippets below to your `build.gradle.kts` file.
+
+[source,groovy]
+----
+dependencyManagement {
+    imports {
+        mavenBom("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:2.6.0")
+    }
+}
+
+dependencies {
+    implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter")
+}
+----
+
+Let's add OpenTelemetry to our Spring Boot application.
+
+Here is OtelConfig.java file that configures OpenTelemetry.
+
+.OtelConfig.java
+[source,java]
+----
+include::{sourcedir}/com/alexamy/nsa2/example/cronjob/config/OtelConfig.java[]
+----
+
+In the OtelConfig.java file, we added OpenTelemetry setup to the Spring Boot application. We created a Tracer bean named ‘nsa2-cronjob-example-tracer’ and a SpanBuilder bean that will create a span for the batch job. The span is called ‘HelloWorldJob’.
+
+.Nsa2CronjobExampleApplication.java - updated
+[source,java]
+----
+include::{sourcedir}/com/alexamy/nsa2/example/cronjob/Nsa2CronjobExampleApplication.java[lines=18..]
+----
+
+To add span to the batch job execution, we need to add the following code snippet to your batch job execution.
+
+[source,java]
+----
+        Span span = helloWorldJoSpanBuilder.startSpan();
+        try (Scope scope = span.makeCurrent()) {
+            helloWorldJob.execute();
+        } finally {
+            span.end();
+        }
+----
+
+When we restart the application, we will see the span related to the batch job execution in the Jaeger UI.
+
+
+image::jaeger-cronjob-list-1.png[]
+
+If you click on the span, you will see the details of the span.
+
+image::jaeger-cronjob-details-1.png[]
+
+From the screenshot above, we can see the span name is `HelloWorldJob` and otel.library.name is 'nsa2-cronjob-example-tracer' and the actual log message in the logs field.
+
+== Real World Example
+
+In a real-world scenario, the batch job will read data from a source database, process the data, and write the processed data to a target database. The batch job will call REST APIs to process the data.
+
+image::jaeger-complex-list-1.png[]
+
+We can see a spen with 55 child spans. The parent span is the batch job execution and the child spans are the database operations and REST API calls.
+
+image::jaeger-complex-details-1.png[]
+
+== Conclusion
+
+In this guide, we added OpenTelemetry to a Spring Boot batch processing application to trace requests. We created a simple batch job that writes a message to the console and added OpenTelemetry to trace the batch job execution. We manually added a span to the batch job execution and saw the span in the Jaeger UI.
+
+== References
+
+* https://docs.dynatrace.com/docs/extend-dynatrace/opentelemetry/walkthroughs/java/java-manual
+* https://www.alibabacloud.com/help/en/opentelemetry/user-guide/use-opentelemetry-to-submit-trace-data-of-java-applications
+* https://www.elastic.co/observability-labs/blog/manual-instrumentation-java-apps-opentelemetry

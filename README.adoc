@@ -1,0 +1,31 @@
+= NSA2 Cronjob Example
+
+
+== Run NSA2 Cronjob Example
+
+=== Simple Standalone using gradlew
+
+[source,shell]
+----
+$ ./gradlew bootRun
+----
+
+=== OTEL Instrumentation
+
+[source,shell]
+----
+$ ./gradlew clean bootJar
+
+#$ export OTEL_RESOURCE_ATTRIBUTES=service.name=nsa2-auth-server,service.version=0.1.0
+
+#$ export OTEL_RESOURCE_ATTRIBUTES=service.name=nsa2-cronjob-example
+
+$ export OTEL_SERVICE_NAME=nsa2-cronjob-example
+$ export OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+$ export OTEL_TRACES_EXPORTER=otlp
+$ export OTEL_LOGS_EXPORTER=otlp
+$ export OTEL_METRICS_EXPORTER=none
+
+$ java -javaagent:./javaagent/opentelemetry-javaagent.jar -Dotel.javaagent.extensions=javaagent/nsa2-otel-extension-1.0-all.jar -jar build/libs/nsa2-cronjob-example-0.0.1-SNAPSHOT.jar 
+
+----

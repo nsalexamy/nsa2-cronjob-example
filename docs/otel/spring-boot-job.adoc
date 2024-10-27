@@ -1,0 +1,69 @@
+
+:imagesdir: images
+== Spring Boot Application as a Job
+
+To run a Spring Boot application as a job in Dkron, you need to create a shell script that runs the application. The shell script should be placed in the job directory. The shell script should contain the command to run the Spring Boot application.
+
+=== Spring Boot Application
+
+We will use a simple Spring Boot application as an example to run as a job in Dkron. Because this application will be executed as a job, it application does not need to have a web server. The application will run a simple task and then exit.
+
+.build.gradle.kts
+[source,kotlin]
+----
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter")
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+----
+
+I only added lombok to the dependencies. The application is a simple Spring Boot application with no web server.
+
+.HelloWorldJob.java
+[source,java]
+----
+@Component
+@Slf4j
+public class HelloWorldJob {
+    public void execute() {
+        log.info("Hello World! - executed at {}", new Date().toString());
+    }
+}
+----
+
+The `HelloWorldJob` class is a simple Spring component that logs a message.
+
+
+.SpringBootJobApplication.java
+----
+@Slf4j
+@SpringBootApplication
+@RequiredArgsConstructor
+public class Nsa2CronjobExampleApplication implements CommandLineRunner {
+    private final HelloWorldJob helloWorldJob;
+
+    public static void main(String[] args) {
+        SpringApplication.run(Nsa2CronjobExampleApplication.class, args);
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        helloWorldJob.execute();
+    }
+
+}
+
+----
+
+==== Build the Application
+
+[source,shellscript]
+----
+$ ./gradlew clean bootJar
+----
+
+The command above builds the application and creates a JAR file in the `build/libs` directory. The name of the JAR file is `nsa2-cronjob-example-0.0.1-SNAPSHOT.jar` and it will be used to run the application as a job in Dkron.
+

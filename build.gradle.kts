@@ -23,7 +23,15 @@ repositories {
     mavenCentral()
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:2.6.0")
+    }
+}
+
+
 dependencies {
+    implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")

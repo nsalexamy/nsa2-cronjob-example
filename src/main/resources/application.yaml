@@ -1,1 +1,17 @@
 spring.application.name: nsa2-cronjob-example
+
+otel:
+  enabled: ${OTEL_ENABLED:false}
+  exporter:
+    otlp:
+      endpoint: http://otel-collector:4318
+  logs:
+    exporter: otlp
+  traces:
+    exporter: otlp
+  metrics:
+    exporter: none
+  # javaagent:
+  #   enabled: true
+  #   jar: ${OTEL_JAVAAGENT_JAR:./javaagent/opentelemetry-javaagent.jar}
+  #   extensions: ${OTEL_EXTENSIONS:./javaagent/nsa2-otel-extension-1.0-all.jar}
