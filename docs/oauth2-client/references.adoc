@@ -1,0 +1,9 @@
+== References
+
+* https://www.baeldung.com/spring-webclient-oauth2
+* https://medium.com/@aldisti0/how-to-make-oauth2-authenticated-requests-in-spring-boot-3-with-restclient-37b502429f8d
+
+=== Classes
+
+* org.springframework.security.oauth2.client.endpoint.DefaultClientCredentialsTokenResponseClient
+-> org.springframework.security.oauth2.client.endpoint.RestClientClientCredentialsTokenResponseClient
