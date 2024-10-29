@@ -1,5 +1,9 @@
 = NSA2 Cronjob Example
 
+== Documentation
+
+* link:docs/otel/index.adoc[Add OpenTelemetry to Spring Boot application for batch processing]
+* link:docs/oauth2-client/index.adoc[Oauth2 Client for Batch Applications]
 
 == Run NSA2 Cronjob Example
 
@@ -32,3 +36,4 @@ $ java -javaagent:./javaagent/opentelemetry-javaagent.jar -Dotel.java.global-aut
 
 $ ./gradlew bootRun --args='--spring-boot.run.jvmArguments="-Dotel.java.global-autoconfigure.enabled=true"'
 ----
+
