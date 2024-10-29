@@ -10,15 +10,15 @@ import org.springframework.web.client.RestClient;
 import java.util.List;
 import java.util.Map;
 
+import static com.alexamy.nsa2.example.cronjob.config.SecurityAdminRestClientConfig.SECURITY_ADMIN_REST_CLIENT_BEAN;
+
 
 @Component
 @Slf4j
 public class GetUsersJob {
     private final RestClient restClient;
 
-    public GetUsersJob(@Qualifier("securityAdminRestClient") RestClient restClient) {
-
-
+    public GetUsersJob(@Qualifier(SECURITY_ADMIN_REST_CLIENT_BEAN) RestClient restClient) {
         this.restClient = restClient;
     }
 
@@ -30,9 +30,6 @@ public class GetUsersJob {
                     .retrieve()
                     .body(new ParameterizedTypeReference<List<User>>() {
                     });
-
-
-//            log.info("=====> users: {}", users);
 
             users.forEach(user -> {
                 log.info("=====> user: {}", user);

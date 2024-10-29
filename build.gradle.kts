@@ -1,3 +1,5 @@
+//import org.springframework.boot.gradle.tasks.run.BootRun
+
 plugins {
     java
 //    id("org.springframework.boot") version "3.3.4"
@@ -5,14 +7,6 @@ plugins {
     id("io.spring.dependency-management") version "1.1.6"
 }
 
-//buildscript {
-//    repositories {
-//        mavenCentral()
-//        maven {
-//            url=uri("https://repo.spring.io/milestone/")
-//        }
-//    }
-//}
 
 group = "com.alexamy.nsa2"
 version = "0.0.1-SNAPSHOT"
@@ -36,7 +30,7 @@ repositories {
 
 dependencyManagement {
     imports {
-        mavenBom("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:2.6.0")
+        mavenBom("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:2.9.0")
     }
 }
 
@@ -53,12 +47,12 @@ dependencies {
 
 //    implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework:spring-web")
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
+//    implementation("org.springframework.boot:spring-boot-starter-actuator")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
-    implementation("org.springframework.boot:spring-boot-starter-jdbc")
-    runtimeOnly("org.postgresql:postgresql")
+//    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+//    runtimeOnly("org.postgresql:postgresql")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -67,3 +61,8 @@ dependencies {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+//tasks.named<BootRun>("bootRun") {
+//    mainClass.set("com.alexamy.nsa2.example.cronjob.Nsa2CronjobExampleApplication")
+//    jvmArgs = listOf("-Dotel.java.global-autoconfigure.enabled=true")
+//}

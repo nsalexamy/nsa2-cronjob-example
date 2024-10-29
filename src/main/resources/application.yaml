@@ -16,62 +16,36 @@ otel:
   #   jar: ${OTEL_JAVAAGENT_JAR:./javaagent/opentelemetry-javaagent.jar}
   #   extensions: ${OTEL_EXTENSIONS:./javaagent/nsa2-otel-extension-1.0-all.jar}
 
-
-#server:
-#  main.banner-mode: off
-#  tomcat.threads.max: 10
-#  servlet.session.cookie:
-#    name: ${SESSION_COOKIE_NAME:JSESSIONID}
-#    http-only: true
-#    secure: ${SESSION_COOKIE_SECURE:false}
-
 spring:
-  datasource:
-    driver-class-name: org.postgresql.Driver
-    url: ${NSA2_AUTH_DB_URL:jdbc:postgresql://localhost:6432/nsa2}
-    username: ${NSA2_AUTH_DB_USERNAME:nsa2}
-    password: ${NSA2_AUTH_DB_PASSWORD:changeme}
+  # enable virtual thread
+  threads.virtual.enabled: true
 
+  main:
+    # disable embedded web server(tomcat)
+    web-application-type: none
+    # disable banner
+    banner-mode: off
 
 spring.security.oauth2.client:
   registration:
     nsa2-cronjob-example:
       provider: ${NSA2_OAUTH_PROVIDER:spring}
-      client-id: ${NSA2_OAUTH_CLIENT_ID:nsa2-cronjob-example}
+      client-id: ${NSA2_OAUTH_CLIENT_ID:nsa2-batch}
       client-secret: ${NSA2_OAUTH_CLIENT_SECRET:secret}
       authorization-grant-type: ${NSA2_OAUTH_GRANT_TYPE:client_credentials}
-#      authorization-grant-type: ${NSA2_OAUTH_GRANT_TYPE:password}
-#      scope: ${NSA2_OAUTH_SCOPE:read,write}
-      scope: ${NSA2_OAUTH_SCOPE:openid,profile,nsa2.admin}
-
-
-
+      scope: ${NSA2_OAUTH_SCOPE:nsa2.admin}
 
   provider:
     spring:
       issuer-uri: ${NSA2_OAUTH_ISSUER_URI:http://nsa2-auth-server:9000}
 
-
-
-
 logging:
   level:
     org.springframework: INFO
     com.alexamy: DEBUG
-#spring:
-#  main:
-#     disable embedded web server(tomcat)
-#    web-application-type: none
-
+    io.opentelemetry: INFO
 
 app:
-  cors:
-    allowed-origins: ${NSA2_CORS_ALLOWED_ORIGINS:http://nsa2-auth-server:9000,http://nsa2-conjob-example:3000}
-    allowed-methods: ${NSA2_CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS,HEAD}
-    allowed-headers: ${NSA2_CORS_ALLOWED_HEADERS:*}
-    allow-credentials: ${NSA2_CORS_ALLOW_CREDENTIALS:true}
-    max-age: ${NSA2_CORS_MAX_AGE:3600}
-
-  auth:
-    post-login-redirect: ${NSA2_POST_LOGIN_REDIRECT:http://nsa2-conjob-example:3000?post-login}
-    post-logout-redirect: ${NSA2_POST_LOGOUT_REDIRECT:http://nsa2-conjob-example:3000?post-logout}
+  services:
+    security-admin:
+      url: ${SECURITY_ADMIN_SERVICE_URL:http://nsa2-security-admin:8084}
